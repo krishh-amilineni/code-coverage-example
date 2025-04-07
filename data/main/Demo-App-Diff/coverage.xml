@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<coverage line-rate="1" branch-rate="1" version="1.9" timestamp="1744053480" lines-covered="5" lines-valid="5" branches-covered="4" branches-valid="4">
+  <sources>
+    <source></source>
+  </sources>
+  <packages>
+    <package name="Demo-App" line-rate="1" branch-rate="1" complexity="4">
+      <classes>
+        <class name="Demo_App.Helper" filename="https://raw.githubusercontent.com/krishh-amilineni/code-coverage-example/843db92be5e228f9028e0b2d9f9a169c6341c606/Demo-App/Helper.cs" line-rate="1" branch-rate="1" complexity="4">
+          <methods>
+            <method name="AnotherMethod" signature="(System.String)" line-rate="1" branch-rate="1" complexity="4">
+              <lines>
+                <line number="7" hits="7" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="22" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="9" hits="4" branch="False" />
+                <line number="11" hits="3" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="75" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="13" hits="2" branch="False" />
+                <line number="15" hits="3" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="7" hits="7" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="22" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="9" hits="4" branch="False" />
+            <line number="11" hits="3" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="75" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="13" hits="2" branch="False" />
+            <line number="15" hits="3" branch="False" />
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>
