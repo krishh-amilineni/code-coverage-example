@@ -4,11 +4,11 @@ This document provides an overview of the various code coverage tools that have 
 
 ## Available Examples
 
-All example workflows are located in the `.github/workflows/examples/` directory and automatically deploy reports to GitHub Pages.
+All example workflows are located in the `.github/workflows/` directory with the prefix `coveragetool-` and automatically deploy reports to GitHub Pages.
 
 ### 1. Coverlet (With ReportGenerator)
 
-**File**: [coverlet-example.yml](./.github/workflows/examples/coverlet-example.yml)
+**File**: [coveragetool-coverlet-example.yml](./.github/workflows/coveragetool-coverlet-example.yml)
 
 **Description**: Coverlet is built into .NET SDK and is the most straightforward option for .NET Core projects. This example demonstrates collecting coverage with Coverlet and generating HTML reports with ReportGenerator.
 
@@ -21,7 +21,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 2. OpenCover
 
-**File**: [opencover-example.yml](./.github/workflows/examples/opencover-example.yml)
+**File**: [coveragetool-opencover-example.yml](./.github/workflows/coveragetool-opencover-example.yml)
 
 **Description**: OpenCover is a traditional .NET Framework coverage tool that's been adapted to work with .NET Core. It runs on Windows and provides detailed coverage metrics.
 
@@ -34,7 +34,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 3. Codecov
 
-**File**: [codecov-example.yml](./.github/workflows/examples/codecov-example.yml)
+**File**: [coveragetool-codecov-example.yml](./.github/workflows/coveragetool-codecov-example.yml)
 
 **Description**: Codecov is a third-party service that provides coverage reporting, visualization, and PR integration.
 
@@ -49,7 +49,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 4. SonarQube
 
-**File**: [sonarqube-example.yml](./.github/workflows/examples/sonarqube-example.yml)
+**File**: [coveragetool-sonarqube-example.yml](./.github/workflows/coveragetool-sonarqube-example.yml)
 
 **Description**: SonarQube is a comprehensive code quality platform that includes coverage reporting as part of its analysis.
 
@@ -64,7 +64,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 5. Code Climate
 
-**File**: [codeclimate-example.yml](./.github/workflows/examples/codeclimate-example.yml)
+**File**: [coveragetool-codeclimate-example.yml](./.github/workflows/coveragetool-codeclimate-example.yml)
 
 **Description**: Code Climate is a code quality platform that provides automated code reviews and test coverage monitoring.
 
@@ -79,7 +79,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 6. AltCover
 
-**File**: [altcover-example.yml](./.github/workflows/examples/altcover-example.yml)
+**File**: [coveragetool-altcover-example.yml](./.github/workflows/coveragetool-altcover-example.yml)
 
 **Description**: AltCover is designed specifically for .NET Core with support for edge cases that other tools might miss.
 
@@ -92,7 +92,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 7. Coveralls
 
-**File**: [coveralls-example.yml](./.github/workflows/examples/coveralls-example.yml)
+**File**: [coveragetool-coveralls-example.yml](./.github/workflows/coveragetool-coveralls-example.yml)
 
 **Description**: Coveralls is a web service to help track code coverage over time, and ensure that all new code is fully covered.
 
@@ -105,7 +105,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 8. dotCover
 
-**File**: [dotcover-example.yml](./.github/workflows/examples/dotcover-example.yml)
+**File**: [coveragetool-dotcover-example.yml](./.github/workflows/coveragetool-dotcover-example.yml)
 
 **Description**: JetBrains dotCover is a .NET coverage tool that integrates well with other JetBrains products.
 
@@ -118,7 +118,7 @@ All example workflows are located in the `.github/workflows/examples/` directory
 
 ### 9. Cobertura Format
 
-**File**: [cobertura-example.yml](./.github/workflows/examples/cobertura-example.yml)
+**File**: [coveragetool-cobertura-example.yml](./.github/workflows/coveragetool-cobertura-example.yml)
 
 **Description**: While Cobertura itself is a Java tool, its report format is widely adopted. This workflow demonstrates generating coverage in the Cobertura XML format.
 

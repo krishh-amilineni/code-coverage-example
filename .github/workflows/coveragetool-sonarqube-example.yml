@@ -114,7 +114,7 @@ jobs:
 
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
-      uses: ./.github/workflows/shared/deploy-to-pages
+      uses: ./.github/workflows/coveragetool-shared-deploy
       with:
         tool_name: sonarqube
         report_dir: sonarqube-report

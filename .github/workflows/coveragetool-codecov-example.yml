@@ -1,11 +1,11 @@
-name: AltCover Example
+name: Codecov Example
 
 # Run on every commit, schedule, and manual trigger
 on:
   push:
     branches: [ main ]  # Run on main branch commits
   schedule:
-    - cron: '0 5 * * 0'  # Run weekly on Sunday at 5 AM
+    - cron: '0 2 * * 0'  # Run weekly on Sunday at 2 AM
   workflow_dispatch:  # Keep manual trigger option
 
 permissions:
@@ -23,34 +23,34 @@ jobs:
       with:
         dotnet-version: 7.0.x
         
-    - name: Install AltCover
-      run: dotnet tool install --global altcover.global
-        
-    - name: Build
-      run: dotnet build
+    - name: Restore dependencies
+      run: dotnet restore
       
-    - name: Test with AltCover
-      run: |
-        # Record initial state
-        dotnet altcover --collect
-        # Run tests
-        dotnet test --no-build
-        # Get coverage report
-        dotnet altcover --opencover -o coverage.opencover.xml
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Test with coverage
+      run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat="opencover,cobertura"
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # Optional: only needed for private repos
+        file: '**/coverage.opencover.xml'
+        fail_ci_if_error: false
+        verbose: true
         
-        # Convert to Cobertura for consistent HTML reporting
+    # Generate HTML report for GitHub Pages
+    - name: Generate HTML Report
+      run: |
         dotnet tool install -g dotnet-reportgenerator-globaltool
-        reportgenerator "-reports:coverage.opencover.xml" "-targetdir:." "-reporttypes:Cobertura"
-        
-    - name: Generate Report
-      run: |
-        reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:altcover-report" "-reporttypes:Html"
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:codecov-report" "-reporttypes:Html"
         
     - name: Extract coverage percentage
       id: coverage
       run: |
         # Extract line rate from the Cobertura XML
-        LINE_RATE=$(grep -o 'line-rate="[0-9.]*"' coverage.cobertura.xml | head -1 | grep -o '[0-9.]*')
+        LINE_RATE=$(grep -o 'line-rate="[0-9.]*"' */*/coverage.cobertura.xml | head -1 | grep -o '[0-9.]*')
         PERCENTAGE=$(echo "$LINE_RATE * 100" | bc)
         echo "Line coverage percentage: $PERCENTAGE%"
         echo "coverage_percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
@@ -64,19 +64,20 @@ jobs:
         fi
         
         # Create badge with actual coverage percentage
-        wget -O altcover-badge.svg "https://img.shields.io/badge/altcover-${PERCENTAGE}%25-${COLOR}"
+        wget -O codecov-badge.svg "https://img.shields.io/badge/codecov-${PERCENTAGE}%25-${COLOR}"
         
-    - name: Upload Report
+    # Upload artifacts for debugging
+    - name: Upload coverage report
       uses: actions/upload-artifact@v3
       with:
-        name: altcover-report
-        path: altcover-report
+        name: codecov-coverage-report
+        path: codecov-report
 
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
-      uses: ./.github/workflows/shared/deploy-to-pages
+      uses: ./.github/workflows/coveragetool-shared-deploy
       with:
-        tool_name: altcover
-        report_dir: altcover-report
-        badge_path: altcover-badge.svg
+        tool_name: codecov
+        report_dir: codecov-report
+        badge_path: codecov-badge.svg
         coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}

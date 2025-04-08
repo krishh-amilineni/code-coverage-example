@@ -1,11 +1,11 @@
-name: Codecov Example
+name: Cobertura Example
 
 # Run on every commit, schedule, and manual trigger
 on:
   push:
     branches: [ main ]  # Run on main branch commits
   schedule:
-    - cron: '0 2 * * 0'  # Run weekly on Sunday at 2 AM
+    - cron: '0 8 * * 0'  # Run weekly on Sunday at 8 AM
   workflow_dispatch:  # Keep manual trigger option
 
 permissions:
@@ -23,28 +23,16 @@ jobs:
       with:
         dotnet-version: 7.0.x
         
-    - name: Restore dependencies
-      run: dotnet restore
-      
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build
       
-    - name: Test with coverage
-      run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat="opencover,cobertura"
+    - name: Test with Cobertura output
+      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
       
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # Optional: only needed for private repos
-        file: '**/coverage.opencover.xml'
-        fail_ci_if_error: false
-        verbose: true
-        
-    # Generate HTML report for GitHub Pages
-    - name: Generate HTML Report
+    - name: Generate Report
       run: |
         dotnet tool install -g dotnet-reportgenerator-globaltool
-        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:codecov-report" "-reporttypes:Html"
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:cobertura-report" "-reporttypes:Html;Cobertura"
         
     - name: Extract coverage percentage
       id: coverage
@@ -64,20 +52,19 @@ jobs:
         fi
         
         # Create badge with actual coverage percentage
-        wget -O codecov-badge.svg "https://img.shields.io/badge/codecov-${PERCENTAGE}%25-${COLOR}"
+        wget -O cobertura-badge.svg "https://img.shields.io/badge/cobertura-${PERCENTAGE}%25-${COLOR}"
         
-    # Upload artifacts for debugging
-    - name: Upload coverage report
+    - name: Upload Report
       uses: actions/upload-artifact@v3
       with:
-        name: codecov-coverage-report
-        path: codecov-report
-
+        name: cobertura-report
+        path: cobertura-report
+        
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
-      uses: ./.github/workflows/shared/deploy-to-pages
+      uses: ./.github/workflows/coveragetool-shared-deploy
       with:
-        tool_name: codecov
-        report_dir: codecov-report
-        badge_path: codecov-badge.svg
+        tool_name: cobertura
+        report_dir: cobertura-report
+        badge_path: cobertura-badge.svg
         coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}

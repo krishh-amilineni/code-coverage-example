@@ -1,11 +1,11 @@
-name: Cobertura Example
+name: Coveralls Example
 
 # Run on every commit, schedule, and manual trigger
 on:
   push:
     branches: [ main ]  # Run on main branch commits
   schedule:
-    - cron: '0 8 * * 0'  # Run weekly on Sunday at 8 AM
+    - cron: '0 6 * * 0'  # Run weekly on Sunday at 6 AM
   workflow_dispatch:  # Keep manual trigger option
 
 permissions:
@@ -23,16 +23,29 @@ jobs:
       with:
         dotnet-version: 7.0.x
         
+    - name: Restore dependencies
+      run: dotnet restore
+      
     - name: Build
-      run: dotnet build
+      run: dotnet build --no-restore
       
-    - name: Test with Cobertura output
-      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+    - name: Test with coverage
+      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat="opencover,cobertura" /p:CoverletOutput=./coverage.opencover.xml
       
-    - name: Generate Report
+    - name: Publish coverage report to coveralls.io
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: '**/coverage.opencover.xml'
+        format: opencover
+        flag-name: unit-tests
+      continue-on-error: true  # Continue even if Coveralls submission fails
+        
+    # Generate HTML report for GitHub Pages
+    - name: Generate HTML Report
       run: |
         dotnet tool install -g dotnet-reportgenerator-globaltool
-        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:cobertura-report" "-reporttypes:Html;Cobertura"
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:coveralls-report" "-reporttypes:Html"
         
     - name: Extract coverage percentage
       id: coverage
@@ -52,19 +65,20 @@ jobs:
         fi
         
         # Create badge with actual coverage percentage
-        wget -O cobertura-badge.svg "https://img.shields.io/badge/cobertura-${PERCENTAGE}%25-${COLOR}"
+        wget -O coveralls-badge.svg "https://img.shields.io/badge/coveralls-${PERCENTAGE}%25-${COLOR}"
         
-    - name: Upload Report
+    # Upload artifacts for debugging
+    - name: Upload coverage report
       uses: actions/upload-artifact@v3
       with:
-        name: cobertura-report
-        path: cobertura-report
-        
+        name: coveralls-coverage-report
+        path: coveralls-report
+
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
-      uses: ./.github/workflows/shared/deploy-to-pages
+      uses: ./.github/workflows/coveragetool-shared-deploy
       with:
-        tool_name: cobertura
-        report_dir: cobertura-report
-        badge_path: cobertura-badge.svg
+        tool_name: coveralls
+        report_dir: coveralls-report
+        badge_path: coveralls-badge.svg
         coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}
