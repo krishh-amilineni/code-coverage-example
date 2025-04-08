@@ -1,7 +1,9 @@
 name: Coveralls Example
 
-# Run on schedule and manual trigger
+# Run on every commit, schedule, and manual trigger
 on:
+  push:
+    branches: [ main ]  # Run on main branch commits
   schedule:
     - cron: '0 6 * * 0'  # Run weekly on Sunday at 6 AM
   workflow_dispatch:  # Keep manual trigger option
