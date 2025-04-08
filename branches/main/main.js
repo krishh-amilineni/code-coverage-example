@@ -213,7 +213,7 @@ var assemblies = [
   {
     "name": "Demo-App",
     "classes": [
-      { "name": "Demo_App.Helper", "rp": "Demo_App_Helper.html", "cl": 10, "ucl": 0, "cal": 10, "tl": 16, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Demo_App.Helper", "rp": "Demo_App_Helper.html", "cl": 10, "ucl": 10, "cal": 20, "tl": 32, "cb": 4, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Demo_App.Program", "rp": "Demo_App_Program.html", "cl": 12, "ucl": 0, "cal": 12, "tl": 20, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
 ];
