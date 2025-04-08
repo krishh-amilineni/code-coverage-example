@@ -32,11 +32,11 @@ jobs:
     - name: Test with AltCover
       run: |
         # Record initial state
-        dotnet tool run altcover --collect
+        dotnet tool run altcover.global --collect
         # Run tests
         dotnet test --no-build
         # Get coverage report
-        dotnet tool run altcover --opencover -o coverage.opencover.xml
+        dotnet tool run altcover.global --opencover -o coverage.opencover.xml
         
         # Convert to Cobertura for consistent HTML reporting
         dotnet tool install -g dotnet-reportgenerator-globaltool
