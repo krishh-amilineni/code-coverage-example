@@ -1,0 +1,187 @@
+name: .NET Test and Coverage Deployment
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Keep the manual trigger option from the deploy workflow
+  workflow_dispatch:
+
+# Using the permissions from the deploy workflow as they're more permissive
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Test with coverage
+      run: |
+        dotnet test --no-build --settings ./coverage.runsettings --results-directory ./coverage
+        # List coverage output files to help with debugging
+        echo "Coverage output files:"
+        find ./coverage -type f | sort
+      
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+      
+    - name: Generate coverage report
+      run: |
+        # Make sure we have coverage files and use the correct pattern
+        if [ -d "./coverage" ] && [ "$(find ./coverage -name "*.cobertura.xml" | wc -l)" -gt 0 ]; then
+          echo "Found coverage files, inspecting contents..."
+          
+          # Examine the structure of the XML file
+          echo "\n==== XML STRUCTURE ===="
+          cat ./coverage/coverage.cobertura.xml | head -n 30
+          echo "\n==== SOURCE ELEMENTS ===="
+          cat ./coverage/coverage.cobertura.xml | grep -o "<source>.*</source>" || echo "No source elements found"
+          echo "\n==== CLASS ELEMENTS ===="
+          cat ./coverage/coverage.cobertura.xml | grep -o "<class.*>" | head -n 5 || echo "No class elements found"
+          echo "\n==== FILENAME ELEMENTS ===="
+          cat ./coverage/coverage.cobertura.xml | grep -o "filename=\".*\"" | head -n 5 || echo "No filename attributes found"
+          
+          # Create a copy of the Cobertura file so we can modify it safely
+          cp ./coverage/coverage.cobertura.xml ./coverage/coverage-modified.cobertura.xml
+          
+          echo "\n==== USING LOCAL FILES APPROACH ===="
+          # Generate report without relying on GitHub source linking
+          echo "Generating coverage report with local files..."
+          reportgenerator \
+            -reports:./coverage/coverage.cobertura.xml \
+            -targetdir:./coveragereport \
+            -reporttypes:Html \
+            -verbosity:Verbose
+            
+          echo "Report generation complete, checking output:"
+          find ./coveragereport -type f | head -n 10
+          
+          # Let's modify the badge manually using the correct percentage from the XML
+          LINE_RATE=$(grep -o 'line-rate="[0-9.]*"' ./coverage/coverage.cobertura.xml | head -1 | grep -o '[0-9.]*')
+          echo "Extracted line rate: $LINE_RATE"
+          
+          # Convert to percentage
+          LINE_COVERAGE=$(echo "$LINE_RATE * 100" | bc)
+          echo "Line coverage percentage: $LINE_COVERAGE%"
+          
+          # Determine color based on coverage
+          COLOR="red"
+          if (( $(echo "$LINE_COVERAGE > 90" | bc -l) )); then
+            COLOR="brightgreen"
+          elif (( $(echo "$LINE_COVERAGE > 75" | bc -l) )); then
+            COLOR="yellow"
+          fi
+          
+          # Create badge with actual coverage percentage
+          wget -O coveragereport/badge.svg "https://img.shields.io/badge/coverage-${LINE_COVERAGE}%25-${COLOR}"
+          
+          # Create a duplicate badge with a fixed name for reliable linking
+          cp coveragereport/badge.svg coveragereport/coverage-badge.svg
+          
+          # Debug the badge creation
+          echo "Badge created with URL: https://img.shields.io/badge/coverage-${LINE_COVERAGE}%25-${COLOR}"
+          echo "Badge file size: $(du -h coveragereport/badge.svg | cut -f1)"
+        else
+          echo "No coverage files found in expected location. Checking what's available:"
+          find ./coverage -type f | sort
+          mkdir -p ./coveragereport
+          echo "<html><body><h1>No coverage data available</h1><p>The test run did not produce any coverage data files.</p></body></html>" > ./coveragereport/index.html
+        fi
+      
+    - name: Add coverage summary to build output
+      shell: bash
+      run: |
+        echo "## Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f "coveragereport/Summary.md" ]; then
+          cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
+        else
+          echo "Coverage report generation failed." >> $GITHUB_STEP_SUMMARY
+        fi
+
+    # Deploy coverage report for all branches in separate directories
+    - name: Deploy to GitHub Pages
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        # Extract branch name and create safe directory name
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        BRANCH_NAME=${BRANCH_NAME//\//-}
+        BRANCH_DIR="branches/$BRANCH_NAME"
+        
+        # For pull requests, use a different naming scheme
+        if [[ "$GITHUB_REF" == refs/pull/* ]]; then
+          PR_NUM=${GITHUB_REF#refs/pull/}
+          PR_NUM=${PR_NUM%/merge}
+          BRANCH_DIR="pull-requests/pr-$PR_NUM"
+          BRANCH_NAME="PR #$PR_NUM"
+        fi
+        
+        echo "Deploying coverage for $BRANCH_NAME to $BRANCH_DIR"
+        
+        # Save coverage report to a temporary location
+        mkdir -p /tmp/coverage-report
+        cp -r coveragereport/* /tmp/coverage-report/
+        
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Create a clean directory for gh-pages branch
+        mkdir -p /tmp/gh-pages
+        cd /tmp/gh-pages
+        
+        # Setup authentication using GITHUB_TOKEN
+        REPO_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        
+        # Initialize new repo with authentication
+        git init
+        git remote add origin "$REPO_URL"
+        git fetch origin gh-pages --depth=1 || true
+        
+        # Create or update gh-pages branch
+        if git branch -a | grep -q origin/gh-pages; then
+          git checkout -b gh-pages origin/gh-pages
+        else
+          git checkout --orphan gh-pages
+          git rm -rf . || true
+          echo "# Code Coverage Reports" > index.md
+        fi
+        
+        # Create directory for this branch (clean it first if it exists)
+        mkdir -p "$BRANCH_DIR"
+        rm -rf "$BRANCH_DIR"/*
+        
+        # Copy coverage report to branch directory
+        cp -r /tmp/coverage-report/* "$BRANCH_DIR"/
+        
+        # Create/update index file that links to all branches
+        if [ ! -f "index.md" ]; then
+          echo "# Code Coverage Reports" > index.md
+        fi
+        
+        # Update the link for this branch in the index
+        grep -v "\[$BRANCH_NAME\]" index.md > index.md.tmp || true
+        echo "- [$BRANCH_NAME]($BRANCH_DIR/index.html) - Updated on $(date)" >> index.md.tmp
+        mv index.md.tmp index.md
+        
+        # Commit and push changes
+        git add .
+        git commit -m "Update coverage report for $BRANCH_NAME"
+        git push origin gh-pages

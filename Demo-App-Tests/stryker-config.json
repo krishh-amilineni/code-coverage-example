@@ -1,0 +1,33 @@
+{
+  "stryker-config": {
+    "reporters": [
+      "html",
+      "progress",
+      "dashboard"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 50
+    },
+    "coverageAnalysis": "perTest",
+    "testRunner": "dotnet",
+    "testProjectFile": "Demo-App-Tests.csproj",
+    "mutate": [
+      "!**/Program.cs", 
+      "../**/*.cs"
+    ],
+    "ignore-methods": [
+      "ConfigureAwait",
+      "Log*",
+      "*Async",
+      "ToString",
+      "HashCode"
+    ],
+    "dashboard": {
+      "project": "github.com/bferking/code-coverage-example",
+      "reportType": "full"
+    },
+    "disableTypeChecks": false
+  }
+}

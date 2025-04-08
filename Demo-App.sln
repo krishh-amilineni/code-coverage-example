@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35728.132
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo-App", "Demo-App\Demo-App.csproj", "{18B536CF-E635-4D39-9193-2A6253677DCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo-App-Tests", "Demo-App-Tests\Demo-App-Tests.csproj", "{CB78292B-5FD6-4961-B63F-4809008FF664}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8A67A21F-3486-46F5-818C-17FD356C0CB8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet-build-and-test-flow.yml = .github\workflows\dotnet-build-and-test-flow.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{18B536CF-E635-4D39-9193-2A6253677DCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18B536CF-E635-4D39-9193-2A6253677DCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18B536CF-E635-4D39-9193-2A6253677DCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18B536CF-E635-4D39-9193-2A6253677DCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB78292B-5FD6-4961-B63F-4809008FF664}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB78292B-5FD6-4961-B63F-4809008FF664}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB78292B-5FD6-4961-B63F-4809008FF664}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB78292B-5FD6-4961-B63F-4809008FF664}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
