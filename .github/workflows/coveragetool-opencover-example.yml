@@ -61,14 +61,14 @@ jobs:
         Invoke-WebRequest -Uri $badgeUrl -OutFile opencover-badge.svg
       
     - name: Upload Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: opencover-report
         path: opencover-report
 
     # Save badge separately for deployment
     - name: Upload Badge
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: opencover-badge
         path: opencover-badge.svg

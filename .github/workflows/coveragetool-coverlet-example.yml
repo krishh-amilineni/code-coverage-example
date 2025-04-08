@@ -62,7 +62,7 @@ jobs:
 
     # Upload artifacts for debugging if needed
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverlet-coverage-report
         path: coverlet-report

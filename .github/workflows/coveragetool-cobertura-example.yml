@@ -55,7 +55,7 @@ jobs:
         wget -O cobertura-badge.svg "https://img.shields.io/badge/cobertura-${PERCENTAGE}%25-${COLOR}"
         
     - name: Upload Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cobertura-report
         path: cobertura-report

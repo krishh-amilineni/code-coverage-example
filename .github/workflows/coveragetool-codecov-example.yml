@@ -68,7 +68,7 @@ jobs:
         
     # Upload artifacts for debugging
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: codecov-coverage-report
         path: codecov-report

@@ -67,7 +67,7 @@ jobs:
         wget -O altcover-badge.svg "https://img.shields.io/badge/altcover-${PERCENTAGE}%25-${COLOR}"
         
     - name: Upload Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: altcover-report
         path: altcover-report

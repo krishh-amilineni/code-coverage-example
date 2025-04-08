@@ -58,13 +58,13 @@ jobs:
         Invoke-WebRequest -Uri $badgeUrl -OutFile dotcover-badge.svg
         
     - name: Upload HTML Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dotcover-html-report
         path: dotcover_report.html
         
     - name: Upload XML Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dotcover-xml-report
         path: dotcover_report.xml
