@@ -116,12 +116,6 @@ jobs:
           echo "Coverage report generation failed." >> $GITHUB_STEP_SUMMARY
         fi
 
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: ./coveragereport
-
     # Deploy coverage report for all branches in separate directories
     - name: Deploy to GitHub Pages
       env:
@@ -191,8 +185,3 @@ jobs:
         git add .
         git commit -m "Update coverage report for $BRANCH_NAME"
         git push origin gh-pages
-
-    - name: Download coverage report
-      uses: actions/download-artifact@v4
-      with:
-        name: coverage-report
