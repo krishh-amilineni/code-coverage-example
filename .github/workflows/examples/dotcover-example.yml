@@ -1,0 +1,85 @@
+name: dotCover Example
+
+# Run on schedule and manual trigger
+on:
+  schedule:
+    - cron: '0 7 * * 0'  # Run weekly on Sunday at 7 AM
+  workflow_dispatch:  # Keep manual trigger option
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Install dotCover
+      run: |
+        dotnet tool install --global JetBrains.dotCover.GlobalTool
+        
+    - name: Build
+      run: dotnet build
+      
+    - name: Test with dotCover
+      run: |
+        dotnet dotcover test --dcReportType=HTML --dcOutput=dotcover_report.html
+        dotnet dotcover test --dcReportType=DetailedXML --dcOutput=dotcover_report.xml
+        
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        # Parse the XML to extract coverage percentage
+        $xml = [xml](Get-Content dotcover_report.xml)
+        $totalCoverage = $xml.Root.CoveragePercent
+        $coveragePercent = [math]::Round([double]$totalCoverage, 2)
+        echo "Coverage percentage: $coveragePercent%"
+        echo "coverage_percentage=$coveragePercent" >> $env:GITHUB_OUTPUT
+        
+        # Determine badge color
+        $color = "red"
+        if ($coveragePercent -gt 90) {
+            $color = "brightgreen"
+        } elseif ($coveragePercent -gt 75) {
+            $color = "yellow"
+        }
+        
+        # Download badge
+        $badgeUrl = "https://img.shields.io/badge/dotcover-${coveragePercent}%25-${color}"
+        Invoke-WebRequest -Uri $badgeUrl -OutFile dotcover-badge.svg
+        
+    - name: Upload HTML Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: dotcover-html-report
+        path: dotcover_report.html
+        
+    - name: Upload XML Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: dotcover-xml-report
+        path: dotcover_report.xml
+        
+    # Create directory structure for deployment
+    - name: Prepare for deployment
+      shell: bash
+      run: |
+        mkdir -p dotcover-report
+        cp dotcover_report.html dotcover-report/index.html
+        cp dotcover-badge.svg dotcover-report/
+
+    # Deploy to GitHub Pages using the shared workflow
+    - name: Deploy to GitHub Pages
+      uses: ./.github/workflows/shared/deploy-to-pages
+      with:
+        tool_name: dotcover
+        report_dir: dotcover-report
+        badge_path: dotcover-report/dotcover-badge.svg
+        coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}

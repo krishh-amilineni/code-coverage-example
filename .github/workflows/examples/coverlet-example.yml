@@ -1,0 +1,75 @@
+name: Coverlet Example
+
+# Run on schedule and manual trigger
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+  workflow_dispatch:  # Keep manual trigger option
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Test with Coverlet
+      run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+      
+    - name: Generate HTML Report
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator "-reports:**/coverage.opencover.xml" "-targetdir:coverlet-report" "-reporttypes:Html"
+      
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        # Extract line rate from the OpenCover XML
+        LINE_RATE=$(grep -o 'covered-percent="[0-9.]*"' */*/coverage.opencover.xml | head -1 | grep -o '[0-9.]*')
+        if [ -z "$LINE_RATE" ]; then
+          # Alternate pattern for OpenCover
+          LINE_RATE=$(grep -o 'sequenceCoverage="[0-9.]*"' */*/coverage.opencover.xml | head -1 | grep -o '[0-9.]*')
+        fi
+        echo "Line coverage percentage: $LINE_RATE%"
+        echo "coverage_percentage=$LINE_RATE" >> $GITHUB_OUTPUT
+        
+        # Create badge
+        COLOR="red"
+        if (( $(echo "$LINE_RATE > 90" | bc -l) )); then
+          COLOR="brightgreen"
+        elif (( $(echo "$LINE_RATE > 75" | bc -l) )); then
+          COLOR="yellow"
+        fi
+        
+        # Create badge with actual coverage percentage
+        wget -O coverlet-badge.svg "https://img.shields.io/badge/coverlet-${LINE_RATE}%25-${COLOR}"
+
+    # Upload artifacts for debugging if needed
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverlet-coverage-report
+        path: coverlet-report
+        
+    # Deploy to GitHub Pages using the shared workflow
+    - name: Deploy to GitHub Pages
+      uses: ./.github/workflows/shared/deploy-to-pages
+      with:
+        tool_name: coverlet
+        report_dir: coverlet-report
+        badge_path: coverlet-badge.svg
+        coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}

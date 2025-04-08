@@ -24,6 +24,22 @@ The GitHub workflow includes these coverage features:
 - Branch-specific report deployment to GitHub Pages
 - Single unified workflow for testing and report deployment
 
+## Alternative Coverage Tools
+
+This repository includes examples of multiple code coverage tools for .NET and other platforms:
+
+- **Coverlet**: Native .NET Core integration (our primary example)
+- **OpenCover**: Traditional .NET coverage tool
+- **Codecov**: Cloud-based coverage platform with PR integration
+- **SonarQube**: Complete code quality platform
+- **Code Climate**: Code quality and coverage analysis
+- **AltCover**: .NET Core specific coverage tool
+- **Coveralls**: Cloud-based coverage trending
+- **dotCover**: JetBrains' coverage solution
+- **Cobertura**: Format-based coverage reporting
+
+See [Coverage Tools Examples](./coverage-tools-examples.md) for detailed information on each tool.
+
 ## Local Development
 
 To run tests with coverage locally:

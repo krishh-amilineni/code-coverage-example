@@ -1,0 +1,82 @@
+name: Coveralls Example
+
+# Run on schedule and manual trigger
+on:
+  schedule:
+    - cron: '0 6 * * 0'  # Run weekly on Sunday at 6 AM
+  workflow_dispatch:  # Keep manual trigger option
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Test with coverage
+      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat="opencover,cobertura" /p:CoverletOutput=./coverage.opencover.xml
+      
+    - name: Publish coverage report to coveralls.io
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: '**/coverage.opencover.xml'
+        format: opencover
+        flag-name: unit-tests
+      continue-on-error: true  # Continue even if Coveralls submission fails
+        
+    # Generate HTML report for GitHub Pages
+    - name: Generate HTML Report
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:coveralls-report" "-reporttypes:Html"
+        
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        # Extract line rate from the Cobertura XML
+        LINE_RATE=$(grep -o 'line-rate="[0-9.]*"' */*/coverage.cobertura.xml | head -1 | grep -o '[0-9.]*')
+        PERCENTAGE=$(echo "$LINE_RATE * 100" | bc)
+        echo "Line coverage percentage: $PERCENTAGE%"
+        echo "coverage_percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
+        
+        # Create badge
+        COLOR="red"
+        if (( $(echo "$PERCENTAGE > 90" | bc -l) )); then
+          COLOR="brightgreen"
+        elif (( $(echo "$PERCENTAGE > 75" | bc -l) )); then
+          COLOR="yellow"
+        fi
+        
+        # Create badge with actual coverage percentage
+        wget -O coveralls-badge.svg "https://img.shields.io/badge/coveralls-${PERCENTAGE}%25-${COLOR}"
+        
+    # Upload artifacts for debugging
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coveralls-coverage-report
+        path: coveralls-report
+
+    # Deploy to GitHub Pages using the shared workflow
+    - name: Deploy to GitHub Pages
+      uses: ./.github/workflows/shared/deploy-to-pages
+      with:
+        tool_name: coveralls
+        report_dir: coveralls-report
+        badge_path: coveralls-badge.svg
+        coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}

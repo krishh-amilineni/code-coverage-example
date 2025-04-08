@@ -1,0 +1,102 @@
+name: Code Climate Example
+
+# Run on schedule and manual trigger
+on:
+  schedule:
+    - cron: '0 4 * * 0'  # Run weekly on Sunday at 4 AM
+  workflow_dispatch:  # Keep manual trigger option
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Build
+      run: dotnet build
+      
+    - name: Test & collect coverage
+      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat="opencover,cobertura"
+      
+    - name: Setup Code Climate test-reporter
+      run: |
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        chmod +x ./cc-test-reporter
+        
+        # Only run before-build and upload if CC token is configured
+        if [ -n "${{ secrets.CC_TEST_REPORTER_ID }}" ]; then
+          ./cc-test-reporter before-build
+        else
+          echo "Code Climate token not configured, running in example mode only"
+        fi
+        
+    - name: Convert coverage to Code Climate format
+      run: |
+        # Install reportgenerator to convert from OpenCover to Cobertura format
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator "-reports:**/coverage.opencover.xml" "-targetdir:." "-reporttypes:Cobertura"
+        
+        # Generate HTML report for GitHub Pages
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:codeclimate-report" "-reporttypes:Html"
+        
+        # Only attempt Code Climate conversion if token is configured
+        if [ -n "${{ secrets.CC_TEST_REPORTER_ID }}" ]; then
+          # Convert to Code Climate format
+          ./cc-test-reporter format-coverage -t cobertura -o coverage.json coverage.cobertura.xml
+        fi
+        
+    - name: Upload coverage report to Code Climate
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      run: |
+        # Only attempt upload if token is configured
+        if [ -n "$CC_TEST_REPORTER_ID" ]; then
+          ./cc-test-reporter upload-coverage -i coverage.json
+        else
+          echo "Code Climate token not configured, skipping upload"
+        fi
+        
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        # Extract line rate from the Cobertura XML
+        LINE_RATE=$(grep -o 'line-rate="[0-9.]*"' coverage.cobertura.xml | head -1 | grep -o '[0-9.]*')
+        PERCENTAGE=$(echo "$LINE_RATE * 100" | bc)
+        echo "Line coverage percentage: $PERCENTAGE%"
+        echo "coverage_percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
+        
+        # Create badge
+        COLOR="red"
+        if (( $(echo "$PERCENTAGE > 90" | bc -l) )); then
+          COLOR="brightgreen"
+        elif (( $(echo "$PERCENTAGE > 75" | bc -l) )); then
+          COLOR="yellow"
+        fi
+        
+        # Create badge with actual coverage percentage
+        wget -O codeclimate-badge.svg "https://img.shields.io/badge/codeclimate-${PERCENTAGE}%25-${COLOR}"
+        
+    # Upload artifacts for debugging
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: codeclimate-coverage-report
+        path: codeclimate-report
+
+    # Deploy to GitHub Pages using the shared workflow
+    - name: Deploy to GitHub Pages
+      uses: ./.github/workflows/shared/deploy-to-pages
+      with:
+        tool_name: codeclimate
+        report_dir: codeclimate-report
+        badge_path: codeclimate-badge.svg
+        coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}

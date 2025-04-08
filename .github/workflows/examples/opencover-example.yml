@@ -1,0 +1,89 @@
+name: OpenCover Example
+
+# Run on schedule and manual trigger
+on:
+  schedule:
+    - cron: '0 1 * * 0'  # Run weekly on Sunday at 1 AM
+  workflow_dispatch:  # Keep manual trigger option
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Install OpenCover
+      run: |
+        choco install opencover.portable -y
+        choco install reportgenerator -y
+        
+    - name: Build
+      run: dotnet build
+      
+    - name: Run OpenCover
+      run: |
+        OpenCover.Console.exe -target:"dotnet.exe" -targetargs:"test --no-build" -output:"coverage.xml" -register:user -filter:"+[Demo-App*]* -[*Tests]*"
+        
+    - name: Generate Report
+      run: reportgenerator "-reports:coverage.xml" "-targetdir:opencover-report" "-reporttypes:Html"
+
+    - name: Extract coverage percentage
+      id: coverage
+      run: |
+        # Extract sequenceCoverage from the XML
+        $xml = [xml](Get-Content coverage.xml)
+        $coverageNode = $xml.SelectSingleNode("//Summary")
+        $coveragePercent = [math]::Round([double]$coverageNode.sequenceCoverage, 2)
+        echo "Coverage percentage: $coveragePercent%"
+        echo "coverage_percentage=$coveragePercent" >> $env:GITHUB_OUTPUT
+        
+        # Determine badge color
+        $color = "red"
+        if ($coveragePercent -gt 90) {
+            $color = "brightgreen"
+        } elseif ($coveragePercent -gt 75) {
+            $color = "yellow"
+        }
+        
+        # Download badge
+        $badgeUrl = "https://img.shields.io/badge/opencover-${coveragePercent}%25-${color}"
+        Invoke-WebRequest -Uri $badgeUrl -OutFile opencover-badge.svg
+      
+    - name: Upload Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: opencover-report
+        path: opencover-report
+
+    # Save badge separately for deployment
+    - name: Upload Badge
+      uses: actions/upload-artifact@v3
+      with:
+        name: opencover-badge
+        path: opencover-badge.svg
+
+    # Convert badge path for Linux
+    - name: Prepare for deployment
+      shell: bash
+      run: |
+        mkdir -p deploy-artifacts
+        cp opencover-report/* deploy-artifacts/ -r
+        cp opencover-badge.svg deploy-artifacts/
+
+    # Deploy to GitHub Pages using the shared workflow
+    - name: Deploy to GitHub Pages
+      uses: ./.github/workflows/shared/deploy-to-pages
+      with:
+        tool_name: opencover
+        report_dir: deploy-artifacts
+        badge_path: deploy-artifacts/opencover-badge.svg
+        coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}
