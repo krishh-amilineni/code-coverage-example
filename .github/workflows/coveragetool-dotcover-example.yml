@@ -57,18 +57,6 @@ jobs:
         $badgeUrl = "https://img.shields.io/badge/dotcover-${coveragePercent}%25-${color}"
         Invoke-WebRequest -Uri $badgeUrl -OutFile dotcover-badge.svg
         
-    - name: Upload HTML Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: dotcover-html-report
-        path: dotcover_report.html
-        
-    - name: Upload XML Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: dotcover-xml-report
-        path: dotcover_report.xml
-        
     # Create directory structure for deployment
     - name: Prepare for deployment
       shell: bash

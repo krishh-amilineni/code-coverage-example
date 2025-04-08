@@ -104,13 +104,6 @@ jobs:
         
         # Create badge with actual coverage percentage
         wget -O sonarqube-badge.svg "https://img.shields.io/badge/sonarqube-${PERCENTAGE}%25-${COLOR}"
-        
-    # Upload artifacts for debugging
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: sonarqube-coverage-report
-        path: sonarqube-report
 
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages

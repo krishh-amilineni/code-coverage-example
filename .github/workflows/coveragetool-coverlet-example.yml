@@ -60,13 +60,6 @@ jobs:
         # Create badge with actual coverage percentage
         wget -O coverlet-badge.svg "https://img.shields.io/badge/coverlet-${LINE_RATE}%25-${COLOR}"
 
-    # Upload artifacts for debugging if needed
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverlet-coverage-report
-        path: coverlet-report
-        
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
       uses: ./.github/workflows/coveragetool-shared-deploy

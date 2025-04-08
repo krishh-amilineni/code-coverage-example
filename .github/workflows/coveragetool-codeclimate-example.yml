@@ -56,17 +56,6 @@ jobs:
           ./cc-test-reporter format-coverage -t cobertura -o coverage.json coverage.cobertura.xml
         fi
         
-    - name: Upload coverage report to Code Climate
-      env:
-        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-      run: |
-        # Only attempt upload if token is configured
-        if [ -n "$CC_TEST_REPORTER_ID" ]; then
-          ./cc-test-reporter upload-coverage -i coverage.json
-        else
-          echo "Code Climate token not configured, skipping upload"
-        fi
-        
     - name: Extract coverage percentage
       id: coverage
       run: |
@@ -86,13 +75,6 @@ jobs:
         
         # Create badge with actual coverage percentage
         wget -O codeclimate-badge.svg "https://img.shields.io/badge/codeclimate-${PERCENTAGE}%25-${COLOR}"
-        
-    # Upload artifacts for debugging
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: codeclimate-coverage-report
-        path: codeclimate-report
 
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages

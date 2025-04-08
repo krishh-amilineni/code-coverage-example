@@ -65,13 +65,6 @@ jobs:
         
         # Create badge with actual coverage percentage
         wget -O codecov-badge.svg "https://img.shields.io/badge/codecov-${PERCENTAGE}%25-${COLOR}"
-        
-    # Upload artifacts for debugging
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: codecov-coverage-report
-        path: codecov-report
 
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages

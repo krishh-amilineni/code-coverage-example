@@ -53,13 +53,7 @@ jobs:
         
         # Create badge with actual coverage percentage
         wget -O cobertura-badge.svg "https://img.shields.io/badge/cobertura-${PERCENTAGE}%25-${COLOR}"
-        
-    - name: Upload Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: cobertura-report
-        path: cobertura-report
-        
+
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
       uses: ./.github/workflows/coveragetool-shared-deploy

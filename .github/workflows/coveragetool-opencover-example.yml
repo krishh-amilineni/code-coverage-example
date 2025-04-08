@@ -60,19 +60,6 @@ jobs:
         $badgeUrl = "https://img.shields.io/badge/opencover-${coveragePercent}%25-${color}"
         Invoke-WebRequest -Uri $badgeUrl -OutFile opencover-badge.svg
       
-    - name: Upload Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: opencover-report
-        path: opencover-report
-
-    # Save badge separately for deployment
-    - name: Upload Badge
-      uses: actions/upload-artifact@v4
-      with:
-        name: opencover-badge
-        path: opencover-badge.svg
-
     # Convert badge path for Linux
     - name: Prepare for deployment
       shell: bash

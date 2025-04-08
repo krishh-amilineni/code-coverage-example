@@ -66,13 +66,6 @@ jobs:
         
         # Create badge with actual coverage percentage
         wget -O coveralls-badge.svg "https://img.shields.io/badge/coveralls-${PERCENTAGE}%25-${COLOR}"
-        
-    # Upload artifacts for debugging
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coveralls-coverage-report
-        path: coveralls-report
 
     # Deploy to GitHub Pages using the shared workflow
     - name: Deploy to GitHub Pages
